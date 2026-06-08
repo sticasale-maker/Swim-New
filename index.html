@@ -510,6 +510,58 @@
   .view-panel { display:none; }
   .view-panel.active { display:block; }
 
+  /* ── Admin (sightings) panel ── */
+  #tab-btn-admin { display:none; }            /* hidden until unlocked */
+  .admin-card {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:12px;
+  }
+  .admin-card h3 {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:20px; letter-spacing:2px; color:var(--deep);
+    margin:0 0 4px;
+  }
+  .admin-hint { font-size:11px; color:var(--dim); margin-bottom:10px; line-height:1.5; }
+  .admin-card textarea {
+    width:100%; min-height:160px; resize:vertical;
+    font-family:'DM Mono',monospace; font-size:12px; line-height:1.5;
+    color:var(--text);
+    background:rgba(255,255,255,0.7);
+    border:1px solid var(--border); border-radius:10px;
+    padding:10px; box-sizing:border-box;
+  }
+  .admin-btn {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:16px; letter-spacing:2px; text-transform:uppercase;
+    padding:11px 16px; border:none; border-radius:10px;
+    background:var(--ocean); color:#fff; cursor:pointer;
+    transition:opacity 0.2s, background 0.2s;
+  }
+  .admin-btn:hover { opacity:0.9; }
+  .admin-btn:disabled { opacity:0.45; cursor:default; }
+  .admin-btn.secondary { background:var(--dim); }
+  .admin-btn.publish { background:var(--green); }
+  .admin-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  #admin-preview {
+    background:rgba(26,158,110,0.07);
+    border:1px solid rgba(26,158,110,0.3);
+    border-radius:10px; padding:12px;
+    font-size:13px; line-height:1.55; color:var(--text);
+    margin-top:12px; display:none; white-space:pre-wrap;
+  }
+  #admin-preview.visible { display:block; }
+  .admin-status { font-size:11px; color:var(--dim); margin-top:8px; min-height:14px; }
+  .admin-status.ok  { color:var(--green); }
+  .admin-status.err { color:var(--red); }
+  .admin-current {
+    font-size:11px; color:var(--dim); line-height:1.5;
+    border-top:1px dashed var(--border); padding-top:10px; margin-top:12px;
+  }
+  .admin-current b { color:var(--deep); }
+
   /* ── Day picker ── */
   .day-picker {
     display: flex;
@@ -666,7 +718,7 @@
     border-radius: var(--radius);
     padding: 12px 14px 14px;
     margin-bottom: 10px;
-    max-height: 300px;
+    max-height: 900px;
     overflow: hidden;
     opacity: 1;
     transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1),
@@ -707,15 +759,44 @@
   }
   .banner-text {
     font-family: 'DM Mono', monospace;
-    font-size: 15px;
+    font-size: 13px;
     color: var(--text);
-    line-height: 1.7;
+    line-height: 1.65;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
   .banner-text em {
     font-style: normal;
     color: var(--ocean);
     font-weight: 500;
   }
+  .sealife-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .sealife-item {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .sealife-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border-radius: 4px;
+    padding: 2px 6px;
+    flex-shrink: 0;
+    color: #fff;
+  }
+  .pill-resident { background: var(--ocean); }
+  .pill-likely   { background: var(--green); }
+  .pill-possible { background: var(--amber); }
+  .pill-rare     { background: var(--dim); }
   .banner-divider {
     height: 1px;
     background: var(--border);
@@ -833,7 +914,7 @@
      
       <div>
         <div class="logo" style="font-size:36px; letter-spacing:2px;">SWIM <span>MANLY</span></div>
-        <div class="header-sub">South Steyne Ocean Swim</div>
+        <div class="header-sub">South Steyne Ocean Swim<span id="gem-badge" style="display:none;margin-left:8px;background:var(--ocean);color:#fff;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:2px 6px;border-radius:4px;vertical-align:middle;">GEM MODEL</span></div>
       </div>
     </div>
   </header>
@@ -861,6 +942,17 @@
         </div>
       </div>
     </div>
+    <div class="banner-divider"></div>
+    <div class="banner-section">
+      <div class="banner-icon" id="banner-sealife-icon">🐢</div>
+      <div class="banner-body">
+        <div class="banner-label">IN THE BAY THIS MONTH</div>
+        <div class="banner-text" id="banner-sealife-text">
+          <div class="banner-skeleton"></div>
+          <div class="banner-skeleton short"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="error-banner" id="errorBanner">
@@ -876,6 +968,7 @@
     <button class="tab-btn active" onclick="switchTab('snapshot')">Now</button>
     <button class="tab-btn" onclick="switchTab('timeline')">5 Days</button>
     <button class="tab-btn" onclick="switchTab('about')">About</button>
+    <button class="tab-btn" id="tab-btn-admin" onclick="switchTab('admin')">Bay</button>
   </div>
 
   <!-- SNAPSHOT TAB -->
@@ -902,6 +995,23 @@
           </div>
           <div class="metric-track-labels">
             <span style="flex:15">Easy</span><span style="flex:15">Doable</span><span style="flex:20">Caution</span><span style="flex:10">Dangerous</span>
+          </div>
+          <!-- Original model Entry — only shown in ?model=gem for comparison -->
+          <div id="gemEntryRow" style="display:none;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
+            <div class="metric-header" style="opacity:0.75;">
+              <div class="metric-name" style="font-size:10px;letter-spacing:1px;">Original:</div>
+              <div class="metric-value" id="gemEntryVal" style="font-size:14px;">—</div>
+              <div class="metric-score" id="gemEntryScore" style="font-size:11px;">—</div>
+            </div>
+            <div class="metric-track-wrap" style="margin-top:4px;">
+              <div class="metric-track-rail" style="height:5px;">
+                <div class="z" style="background:var(--green);flex:15"></div>
+                <div class="z" style="background:var(--amber);flex:15"></div>
+                <div class="z" style="background:var(--yellow);flex:20"></div>
+                <div class="z" style="background:var(--red);flex:10"></div>
+              </div>
+              <div class="metric-track-dot" id="gemEntryDot" style="color:var(--ocean);left:50%"></div>
+            </div>
           </div>
         </div>
         <div class="metric-block green" id="metricSwim">
@@ -956,7 +1066,9 @@
       <div class="slider-ticks" id="sliderTicks"></div>
     </div>
 
-    <!-- Weather strip -->
+    <!-- DEBUG PANEL — only visible with ?model=gem&debug=1 -->
+    <div id="gemDebug" style="display:none;margin:0 0 10px;background:#0d2b3e;color:#cfe8f2;border-radius:var(--radius);padding:10px 12px;font-family:'DM Mono',monospace;font-size:10px;line-height:1.5;overflow-x:auto;"></div>
+
     <div class="weather-strip" id="weatherStrip">
       <div class="wx-item">
         <div class="wx-icon">🌡</div>
@@ -1128,6 +1240,41 @@
         <div id="calMetrics" style="margin-top:10px;"></div>
       </div>
     </div>
+
+    <!-- Model A/B Comparison (Original vs GEM) -->
+    <div class="about-panel" style="padding:16px 12px; margin-top:10px;">
+      <p style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--ocean);margin-bottom:8px;">MODEL A / B — ORIGINAL vs GEM</p>
+      <p id="cmpSub" style="font-size:11px;color:var(--dim);line-height:1.4;margin-bottom:10px;">Runs both wave models on the current time-slider slot. Original = 1-D sea-hit at 5s; GEM = 2-D direction×period table (Gem-Cla50-50) with real wind-wave period.</p>
+      <button onclick="runModelCompare()" style="width:100%;padding:12px;background:var(--deep);color:#fff;border:none;border-radius:10px;font-size:15px;cursor:pointer;font-family:inherit;margin-bottom:14px;">Compare models on current slot</button>
+      <div id="cmpResults" style="display:none;">
+        <table class="cal-table">
+          <thead><tr><th>Component</th><th>Original</th><th>GEM</th><th>Δ</th></tr></thead>
+          <tbody id="cmpTableBody"></tbody>
+        </table>
+        <div id="cmpMetrics" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN / BAY SIGHTINGS TAB (hidden until unlocked) -->
+  <div class="view-panel" id="panel-admin">
+    <div class="admin-card">
+      <h3>Bay Sightings — Admin</h3>
+      <div class="admin-hint">
+        Paste recent posts from the VIZ Facebook group below (sightings, visibility reports — copy as much or as little as you like). Tap <b>Summarise</b> to generate a short public blurb, review it, then <b>Publish</b> to push it live to the "In the bay this month" banner for all users.
+      </div>
+      <textarea id="admin-input" placeholder="Paste diver posts here…&#10;&#10;e.g. &quot;Dived CTB this morning, viz a solid 10m, three weedy seadragons near the kelp line and a big blue groper at Fairy Bower. Octopus out by the cabbages.&quot;"></textarea>
+      <div class="admin-row">
+        <button class="admin-btn" id="admin-summarise-btn" onclick="adminSummarise()">Summarise</button>
+        <button class="admin-btn secondary" onclick="document.getElementById('admin-input').value='';document.getElementById('admin-preview').classList.remove('visible');adminSetStatus('');">Clear</button>
+      </div>
+      <div id="admin-preview" contenteditable="true" spellcheck="true"></div>
+      <div class="admin-row" id="admin-publish-row" style="display:none;">
+        <button class="admin-btn publish" id="admin-publish-btn" onclick="adminPublish()">Publish to app</button>
+      </div>
+      <div class="admin-status" id="admin-status"></div>
+      <div class="admin-current" id="admin-current">Loading current published summary…</div>
+    </div>
   </div>
 
   <div id="tl-tooltip"></div>
@@ -1164,8 +1311,28 @@ const BW_CACHE_TTL    = 3 * 60 * 60 * 1000; // 3 hours (updated twice daily by B
 
 
 const SHEET_CSV_URL    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTPPOtn-jlsI3-eu04_kS3FylNaiJtYJlfJ9RarZwIXfjbpuGHt9tEMgrHr74370-r_FrRN3vx4vIPD/pub?output=csv';
-const SWIM_CONFIG_KEY  = 'swim_config_cache_v3';
+const SWIM_CONFIG_KEY  = 'swim_config_cache_v4';
 const SWIM_CONFIG_TTL  = 60 * 60 * 1000; // 1 hour
+
+// =============================================================================
+// GEM MODEL FLAG — append ?model=gem to URL to activate
+// When active: swell1, swell2, windWave use the Gem-Cla50-50 tab 2D lookup
+// (19 dir rows × 20 period cols, % energy loss). Wind chop unchanged.
+// =============================================================================
+const GEM_MODEL = location.search.includes('model=gem');
+const GEM_DEBUG = location.search.includes('debug=1');
+// Optional URL override for the wind-wave route blend (0=arrival/point … 1=route/line).
+// e.g. ?wwblend=1 forces pure route geometry for A/B testing without editing the sheet.
+const WW_BLEND_OVERRIDE = (() => {
+  const m = location.search.match(/[?&]wwblend=([\d.]+)/);
+  if (!m) return null;
+  const v = parseFloat(m[1]);
+  return isNaN(v) ? null : Math.max(0, Math.min(1, v));
+})();
+// GEM tab CSV — published from the "Gem-Cla50-50" sheet (gid must match your sheet)
+// GEM tab CSV — published from the "Gem-Cla50-50" sheet (gid 2011938330)
+const GEM_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTPPOtn-jlsI3-eu04_kS3FylNaiJtYJlfJ9RarZwIXfjbpuGHt9tEMgrHr74370-r_FrRN3vx4vIPD/pub?gid=2011938330&single=true&output=csv';
+const GEM_CONFIG_KEY = 'swim_gem_config_v2'; // bumped to v2 — forces fresh fetch with real gid
 
 // S. Steyne column positions (0-based):
 //   Tuning params: col P = index 15 (rows 24–26 = indices 23–25)
@@ -1212,7 +1379,10 @@ const SITE_DEFAULTS = {
   windSens:       0.2,
   swellSens:      1.8,
   periodPower:    20,
-  swellPeriodMult: 5,   // sheet row 27 col P — caps swell period in power calc
+  swellPeriodMult: 5,   // sheet row 27 col P — loaded but no longer used to cap period (cap removed)
+  wwSens:         null,  // wind-wave demerit scale; null → falls back to swellSens (keeps existing calibration untouched)
+  wwRouteBlend:   0,     // wind-wave DIRECTION filter geometry: 0 = arrival (point, into S Steyne) … 1 = route (line, S Steyne→Shelly). Blend in between.
+  gemTable:       null, // 2D array [19 dirs][20 periods] % energy loss — GEM model only
   lookup: {
     wind: [100,100,100,90,90,80,70,60,50,40,35,30,20,15,12,10,5,0,0,0,0,0,0,0,5,10,17,25,35,60,80,90],
     sea:  [20,50,100,100,100,100,100,100,100,90,50,20,10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -1264,6 +1434,19 @@ function applySwimConfig(rows) {
   if (rows[26]?.[1]?.includes('Swell period'))
     SITE.swellPeriodMult = n(rows[26][STEYNE_TUNE_COL]) || 5;
 
+  // Optional wind-wave tuning — label-matched anywhere in the tuning column, so
+  // they load wherever you add them in the sheet and fall back to defaults if absent.
+  for (let r = 0; r < rows.length; r++) {
+    const label = rows[r]?.[1] || '';
+    if (label.includes('WW sens') || label.includes('Wind wave sens')) {
+      const v = n(rows[r][STEYNE_TUNE_COL]);
+      if (v > 0) SITE.wwSens = v;
+    }
+    if (label.includes('Route blend') || label.includes('WW route') || label.includes('WW blend')) {
+      SITE.wwRouteBlend = Math.max(0, Math.min(1, n(rows[r][STEYNE_TUNE_COL])));
+    }
+  }
+
   // Rows 32–63 (indices 31–62) — direction table cols AP/AQ/AR
   const wind=[], sea=[], rif=[];
   for (let r = 31; r <= 62; r++) {
@@ -1285,6 +1468,8 @@ async function loadConfig() {
       SITE.swellSens      = c.swellSens;
       SITE.periodPower    = c.periodPower;
       SITE.swellPeriodMult = c.swellPeriodMult || 5;
+      SITE.wwSens          = (c.wwSens != null) ? c.wwSens : null;
+      SITE.wwRouteBlend    = c.wwRouteBlend || 0;
       SITE.lookup      = c.lookup;
       console.log('Swim config: loaded from cache');
       return;
@@ -1303,6 +1488,8 @@ async function loadConfig() {
         swellSens:      SITE.swellSens,
         periodPower:    SITE.periodPower,
         swellPeriodMult: SITE.swellPeriodMult,
+        wwSens:          SITE.wwSens,
+        wwRouteBlend:    SITE.wwRouteBlend,
         lookup:      SITE.lookup,
       }
     }));
@@ -1314,6 +1501,8 @@ async function loadConfig() {
     SITE.swellSens      = SITE_DEFAULTS.swellSens;
     SITE.periodPower    = SITE_DEFAULTS.periodPower;
     SITE.swellPeriodMult = SITE_DEFAULTS.swellPeriodMult;
+    SITE.wwSens          = SITE_DEFAULTS.wwSens;
+    SITE.wwRouteBlend    = SITE_DEFAULTS.wwRouteBlend;
     SITE.lookup      = JSON.parse(JSON.stringify(SITE_DEFAULTS.lookup));
   }
 }
@@ -1345,103 +1534,170 @@ function dirLookup(arr, deg) {
 }
 
 // =============================================================================
-// SOUTH STEYNE ENERGY-LOSS TABLE  (refraction + headland model)
-// Source: Forecast_for_Claude_-_Sheet12.csv  (refraction+headland avg w/ Gemini)
-//   Rows  = swell direction in compass °  (0 = N, 90 = E, 180 = S)
-//   Cols  = wave period T in seconds       (1 … 20)
-//   Value = % of wave ENERGY LOST before reaching South Steyne.
-//   Energy REACHING the beach (%) = 100 − value.   (dir 90° = best, 0% loss)
-// -----------------------------------------------------------------------------
-// MAINTENANCE: to update, paste the new CSV (identical layout: a "dir" header
-// row of periods, then one row per direction) between the back-ticks below.
-// No other code changes needed — the parser + interpolation pick it up.
+// GEM MODEL — 2D bilinear lookup into Gem-Cla50-50 table
+// Table: rows = swell direction 0°–180° in 10° steps (19 rows)
+//        cols = period 1–20s in 1s steps (20 cols)
+//        values = % energy LOSS reaching beach
+// Returns: transmit fraction (0–1) = (100 − loss) / 100
 // =============================================================================
-const SS_ENERGY_LOSS_CSV = `dir,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
-0,100,100,100,100,100,100,100,100,97.5,92.5,89,85,81,77.5,75,73,71.5,70,69,68
-10,100,100,100,100,99.9,99.8,98.7,95.5,89.3,83,77.6,73.1,68.5,64.2,60.6,57.2,53.9,50.1,46.1,41.7
-20,100,99.9,99.4,97.7,94.9,89.7,83.5,76.8,69.9,62.9,56.8,51.5,47,42.8,39.3,36,32.8,29.2,25.2,21
-30,93.8,93.1,89.9,85.7,79.9,72.5,65,57.9,50.7,43.3,38.4,34.3,31,28.6,26.4,24.1,21.5,18.7,15.5,12.1
-40,84.2,79.9,74,66.6,59.1,51,43.4,36.7,31,27.6,25.7,24.2,22.6,20.9,19,17.1,15.1,12.9,10.6,8.1
-50,65,59.2,51.8,43.9,36.5,29.5,24,21.5,19.9,18.8,17.6,16.4,15.2,13.9,12.5,11.2,9.7,8.2,6.7,5.1
-60,27.5,22.9,19.2,16.5,14.9,14.2,13.5,12.7,12,11.2,10.5,9.7,8.9,8.1,7.2,6.4,5.5,4.6,3.7,2.8
-70,8.5,8.2,7.8,7.4,7.1,6.7,6.3,6,5.6,5.2,4.8,4.4,4,3.7,3.3,2.9,2.5,2.1,1.6,1.2
-80,2.2,2.1,2,1.9,1.8,1.7,1.6,1.5,1.4,1.3,1.2,1.1,1,0.9,0.8,0.7,0.6,0.5,0.4,0.3
-90,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-100,24.7,19.6,14.5,9.4,4.3,2.2,1.6,1.5,1.4,1.3,1.2,1.1,1,0.9,0.8,0.7,0.6,0.5,0.4,0.3
-110,62.8,55,51.1,47.9,42.4,36.9,31.5,26.1,20.7,12.8,8.9,6.5,5.1,4.2,3.6,3,2.6,2.1,1.7,1.3
-120,99.9,93.4,83.5,77,72.1,68.1,63.8,58.4,53.1,42.5,35.9,29.9,24.3,19.9,15.9,12.9,10.4,8.5,6.7,5.2
-130,100,99.9,97.8,93.6,89.4,86.2,83.6,80.4,77,68.8,62.1,55,48,41.9,35.8,30.8,26.2,22,18.4,15.2
-140,100,100,99.9,99.1,97.5,95.6,93.8,92.1,90.5,86.9,82.2,77.1,71.4,65.7,59.4,53.5,48.1,42.5,37.4,32.6
-150,100,100,100,99.9,99.7,99.1,98.4,97.6,96.7,95.7,93.7,91,87.7,83.8,79.3,74.6,69.7,64.6,59.3,53.8
-160,100,100,100,100,100,100,99.9,99.7,99.5,99.2,98.9,98.4,97.3,95.7,93.8,91.3,88.6,85.1,81.4,76.8
-170,100,100,100,100,100,100,100,100,100,100,99.9,99.9,99.8,99.7,99.5,98.7,97.8,96.8,95.1,93
-180,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100`;
+function gemLookup(dirDeg, periodS) {
+  const tbl = SITE.gemTable;
+  if (!tbl) return 0.5; // fallback if table not loaded
 
-const SS_LOSS = (function (csv) {
-  const lines = csv.trim().split(/\r?\n/);
-  const periods = lines[0].split(',').slice(1).map(Number);
-  const dirs = [], grid = [];
-  for (let i = 1; i < lines.length; i++) {
-    const c = lines[i].split(',').map(Number);
-    dirs.push(c[0]);
-    grid.push(c.slice(1));
+  // Clamp direction to 0–180 (table only covers swell-relevant arc)
+  const dir = Math.max(0, Math.min(180, ((dirDeg % 360) + 360) % 360 > 180
+    ? 360 - (((dirDeg % 360) + 360) % 360)
+    : ((dirDeg % 360) + 360) % 360));
+
+  // Clamp period to 1–20s
+  const per = Math.max(1, Math.min(20, periodS || 8));
+
+  // Row index: dir 0°=row0, 180°=row18, step=10°
+  const ri = dir / 10;
+  const r0 = Math.floor(ri), r1 = Math.min(18, r0 + 1);
+  const rf = ri - r0;
+
+  // Col index: period 1s=col0, 20s=col19, step=1s
+  const ci = per - 1;
+  const c0 = Math.floor(ci), c1 = Math.min(19, c0 + 1);
+  const cf = ci - c0;
+
+  // Bilinear interpolation of % loss
+  const loss =
+    tbl[r0][c0] * (1-rf) * (1-cf) +
+    tbl[r0][c1] * (1-rf) *    cf  +
+    tbl[r1][c0] *    rf  * (1-cf) +
+    tbl[r1][c1] *    rf  *    cf;
+
+  return Math.max(0, (100 - loss) / 100); // transmit fraction
+}
+
+// Parse the Gem-Cla50-50 CSV tab into a 2D array [19][20]
+// Row 2 (index 1) = period headers (cols B–U = indices 1–20)
+// Rows 3–21 (indices 2–20) = data: col A = direction, cols B–U = % loss values
+function parseGemCSV(text) {
+  const rows = text.split('\n').map(line => {
+    const cols = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') inQ = !inQ;
+      else if (c === ',' && !inQ) { cols.push(cur); cur = ''; }
+      else cur += c;
+    }
+    cols.push(cur); return cols;
+  });
+  const n = v => parseFloat(v) || 0;
+  const table = [];
+  // Rows 3–21 = indices 2–20 (19 direction rows)
+  for (let r = 2; r <= 20; r++) {
+    const row = rows[r] || [];
+    const periods = [];
+    // Cols B–U = indices 1–20 (20 period cols)
+    for (let c = 1; c <= 20; c++) {
+      periods.push(n(row[c]));
+    }
+    table.push(periods);
   }
-  return { dirs, periods, grid };
-})(SS_ENERGY_LOSS_CSV);
+  return table.length === 19 ? table : null;
+}
 
-// % of swell energy that REACHES South Steyne (0–100), period-aware.
-// Bilinear interpolation over the table; swell from land (>180°) → 0.
-// Replaces the old period-independent `sea` direction lookup for swell.
-function ssEnergyTransmit(dirDeg, periodS) {
-  let d = (((dirDeg || 0) % 360) + 360) % 360;
-  if (d > 180) return 0;                              // from land → blocked
-  const D = SS_LOSS.dirs, P = SS_LOSS.periods, G = SS_LOSS.grid;
-  const t = Math.max(P[0], Math.min(P[P.length - 1], periodS || P[0]));
-  const di = d / (D[1] - D[0]);
-  const d0 = Math.floor(di), d1 = Math.min(d0 + 1, D.length - 1), fd = di - d0;
-  const ti = (t - P[0]) / (P[1] - P[0]);
-  const t0 = Math.floor(ti), t1 = Math.min(t0 + 1, P.length - 1), ft = ti - t0;
-  const top = G[d0][t0] + (G[d0][t1] - G[d0][t0]) * ft;
-  const bot = G[d1][t0] + (G[d1][t1] - G[d1][t0]) * ft;
-  const loss = top + (bot - top) * fd;
-  return Math.max(0, Math.min(100, 100 - loss));
+async function loadGemConfig(force) {
+  if (!GEM_MODEL && !force) return;
+  try {
+    const cached = JSON.parse(localStorage.getItem(GEM_CONFIG_KEY) || 'null');
+    if (cached && (Date.now() - cached.fetchedAt) < SWIM_CONFIG_TTL && cached.gemTable) {
+      SITE.gemTable = cached.gemTable;
+      console.log('GEM config: loaded from cache');
+      return;
+    }
+  } catch(e) {}
+  try {
+    const res = await fetch(GEM_SHEET_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('GEM sheet fetch failed: ' + res.status);
+    const table = parseGemCSV(await res.text());
+    if (table) {
+      SITE.gemTable = table;
+      localStorage.setItem(GEM_CONFIG_KEY, JSON.stringify({ fetchedAt: Date.now(), gemTable: table }));
+      console.log('GEM config: loaded from sheet (' + table.length + ' dir rows)');
+    }
+  } catch(e) {
+    console.warn('GEM config: sheet unavailable, GEM model will use fallback.', e.message);
+  }
 }
 
 // =============================================================================
 // SCORE CALCULATION
-//   wind_d   = windPower(kmh) × windHit/100 × windSens          (negatives kept)
-//   ww_d     = swellPower(wwH,5) × ssEnergyTransmit(wwDir,5)/100 × swellSens
-//   s1_d     = swellPower(h,p) × ssEnergyTransmit(dir,period)/100 × swellSens
-//   s2_d     = swellPower(h,p) × ssEnergyTransmit(dir,period)/100 × swellSens
-//   (energy table folds in BOTH direct-hit direction AND refraction/headland —
-//    no separate refraction demerit)
-//   tideBase = all (wind+ww+swell)
+// Original model:
+//   wind_d   = windPower(kmh) × windHit/100 × windSens   (negatives kept)
+//   ww_d     = swellPower(wwH,5) × seaHit(wwDir)/100 × swellSens (period hardcoded=5)
+//   s1_d     = swellPower(h,p) × seaHit(dir)/100 × swellSens
+//   s2_d     = swellPower(h,p) × seaHit(dir)/100 × swellSens
+//   rif_d    = (rif1×p1×spm + rif2×p2×spm) / 1000
 //   tide_d   = o*(t-0.2)
-//   score    = max(0, round(60 - total))
+// GEM model (?model=gem):
+//   wind_d   = same as original (AP column, no change)
+//   ww_d     = swellPower(wwH, wwP_real) × gemLookup(wwDir, wwP_real) × swellSens
+//   s1_d     = swellPower(h,p) × gemLookup(dir,p) × swellSens  (no period cap)
+//   s2_d     = swellPower(h,p) × gemLookup(dir,p) × swellSens  (no period cap)
+//   rif_d    = 0 (combined into gemLookup)
+//   tide_d   = o*(t-0.2)
 // =============================================================================
-function calcScore(d) {
+function calcScore(d, modelOverride) {
+  // modelOverride: 'gem' | 'orig' | undefined. When omitted, follows the
+  // global GEM_MODEL flag (live behaviour). Lets the CAL tab run both models
+  // on the same forecast slot for side-by-side comparison.
+  const useGem = modelOverride ? (modelOverride === 'gem') : GEM_MODEL;
   const lk = SITE.lookup;
   const { windKmh, windDir, swell1H, swell1Dir, swell1P,
-          swell2H, swell2Dir, swell2P, windWaveH, windWaveDir, tideM } = d;
+          swell2H, swell2Dir, swell2P, windWaveH, windWaveDir, windWaveP, tideM } = d;
 
-  const spm_cap = SITE.swellPeriodMult || 5;
-  const s1p = swellPower(swell1H, Math.min(swell1P, spm_cap));
-  const s2p = swellPower(swell2H || 0, Math.min(swell2P || 8, spm_cap));
+  // Wind chop — identical in both models
+  const windHit  = dirLookup(lk.wind, windDir);
+  const wind_d   = windPower(windKmh) * (windHit / 100) * SITE.windSens;
 
-  const windHit  =                dirLookup(lk.wind, windDir);
-  // Directional swell energy + refraction now both come from the period-aware
-  // energy-loss table (ssEnergyTransmit = % energy reaching beach). This single
-  // table replaces BOTH the old flat `sea` direct-hit lookup AND the `rif` term.
-  const wwSeaHit = ssEnergyTransmit(windWaveDir || windDir, 5);   // wind waves ≈ 5s
-  const s1sea    = ssEnergyTransmit(swell1Dir, swell1P);
-  const s2sea    = ssEnergyTransmit(swell2Dir || 0, swell2P || 8);
+  // Wind-wave directional geometry — blend ARRIVAL (point: energy refracting into
+  // the S Steyne entry/break) with ROUTE (line: swimmer exposure crossing the bay
+  // S Steyne→Shelly). Arrival = the swell/sea filter; Route = the wind-exposure
+  // filter (lk.wind, calibrated on the swim line). wwRouteBlend: 0 = pure arrival
+  // (legacy), 1 = pure route. wwSens scales the wind-wave term on its own so the
+  // swell calibration (swellSens) is unaffected.
+  const wwBlend = (WW_BLEND_OVERRIDE != null) ? WW_BLEND_OVERRIDE : (SITE.wwRouteBlend || 0);
+  const wwSens  = (SITE.wwSens != null) ? SITE.wwSens : SITE.swellSens;
+  const wwRoute = Math.max(0, dirLookup(lk.wind, windWaveDir || windDir)) / 100;
 
-  const wind_d = windPower(windKmh)           * (windHit/100)   * SITE.windSens;
-  const ww_d   = swellPower(windWaveH||0, 5)  * (wwSeaHit/100)  * SITE.swellSens;
-  const s1_d   = s1p * (s1sea/100) * SITE.swellSens;
-  const s2_d   = s2p * (s2sea/100) * SITE.swellSens;
+  let ww_d, s1_d, s2_d, rif_d;
 
-  const o      = wind_d + ww_d + s1_d + s2_d; // tideBase='all' (refraction folded into s1/s2 via table)
+  if (useGem) {
+    // ── GEM model: 2D table replaces seaHit + rif; real wind wave period ──
+    const wwP    = windWaveP || 5; // use real period, fall back to 5 if missing
+    const wwArrival = Math.max(0, gemLookup(windWaveDir || windDir, wwP));
+    const wwTx   = (1 - wwBlend) * wwArrival + wwBlend * wwRoute;
+    const s1Tx   = Math.max(0, gemLookup(swell1Dir, swell1P));
+    const s2Tx   = Math.max(0, gemLookup(swell2Dir || 0, swell2P || 8));
+
+    ww_d  = swellPower(windWaveH || 0, wwP) * wwTx * wwSens;
+    s1_d  = swellPower(swell1H, swell1P)    * s1Tx * SITE.swellSens;
+    s2_d  = swellPower(swell2H || 0, swell2P || 8) * s2Tx * SITE.swellSens;
+    rif_d = 0; // absorbed into gemLookup
+  } else {
+    // ── Original model ────────────────────────────────────────────────────
+    const s1p      = swellPower(swell1H, swell1P);
+    const s2p      = swellPower(swell2H || 0, swell2P || 8);
+
+    const wwArrival = Math.max(0, dirLookup(lk.sea, windWaveDir || windDir)) / 100;
+    const wwTx     = (1 - wwBlend) * wwArrival + wwBlend * wwRoute;
+    const s1sea    = Math.max(0, dirLookup(lk.sea, swell1Dir));
+    const s1rif    =             dirLookup(lk.rif, swell1Dir);
+    const s2sea    = Math.max(0, dirLookup(lk.sea, swell2Dir || 0));
+    const s2rif    =             dirLookup(lk.rif, swell2Dir || 0);
+
+    ww_d  = swellPower(windWaveH || 0, 5) * wwTx * wwSens;
+    s1_d  = s1p * (s1sea / 100) * SITE.swellSens;
+    s2_d  = s2p * (s2sea / 100) * SITE.swellSens;
+    rif_d = (s1rif * s1p * SITE.spm + s2rif * s2p * SITE.spm) / 1000;
+  }
+
+  const o      = wind_d + ww_d + s1_d + s2_d + rif_d;
   const tide_d = SITE.tide(o, tideM);
   const total  = o + tide_d;
 
@@ -1453,6 +1709,7 @@ function calcScore(d) {
       windWave: Math.round(ww_d    * 10) / 10,
       swell1:   Math.round(s1_d   * 10) / 10,
       swell2:   Math.round(s2_d   * 10) / 10,
+      refrac:   Math.round(rif_d  * 10) / 10,
     },
     // ── Three swimmer metrics ──────────────────────────────────────────────
     // Metric 1: Entry — based on final score (0–60)
@@ -1480,7 +1737,15 @@ function calcScore(d) {
     // Metric 3: Surge — v6 = 60 - rawSwell (higher = better)
     //   Steady v6>50, Drifty v6≤50&>30, Surgy v6≤30&≥10, Washy v6<10
     water: (() => {
-      const rawSwell = s1p * (s1sea/100) + s2p * (s2sea/100);
+      const rawSwell = useGem
+        ? s1_d / SITE.swellSens + s2_d / SITE.swellSens  // GEM: use computed demerits scaled back
+        : (() => {
+            const s1p2 = swellPower(swell1H, swell1P);
+            const s2p2 = swellPower(swell2H || 0, swell2P || 8);
+            const s1sea2 = Math.max(0, dirLookup(lk.sea, swell1Dir));
+            const s2sea2 = Math.max(0, dirLookup(lk.sea, swell2Dir || 0));
+            return s1p2 * (s1sea2/100) + s2p2 * (s2sea2/100);
+          })();
       const v6 = Math.max(0, Math.round(60 - rawSwell));
       if (v6 > 50) return { label:'Steady', cls:'green',  score: v6 };
       if (v6 > 30) return { label:'Drifty', cls:'amber',  score: v6 };
@@ -1488,6 +1753,75 @@ function calcScore(d) {
       return             { label:'Washy',  cls:'red',     score: v6 };
     })(),
   };
+}
+
+// =============================================================================
+// MODEL A/B COMPARISON — runs Original vs GEM on the current slider slot
+// =============================================================================
+async function runModelCompare() {
+  const slot = _matrix[_sliderIdx];
+  const sub  = document.getElementById('cmpSub');
+  if (!slot) { if (sub) sub.textContent = 'No forecast slot loaded yet — open the Now tab first.'; return; }
+
+  // Ensure the GEM table is available even when not running in ?model=gem mode
+  if (!SITE.gemTable) {
+    if (sub) sub.textContent = 'Loading GEM table…';
+    await loadGemConfig(true);
+  }
+  const haveGem = !!SITE.gemTable;
+
+  const A = calcScore(slot, 'orig');
+  const B = calcScore(slot, 'gem');
+
+  const rows = [
+    ['Wind chop', 'wind'],
+    ['Wind wave', 'windWave'],
+    ['Swell 1',   'swell1'],
+    ['Swell 2',   'swell2'],
+    ['Refraction','refrac'],
+    ['Tide',      'tide'],
+  ];
+  const fmt = v => (Math.round(v * 10) / 10).toFixed(1);
+  let body = '';
+  rows.forEach(([label, key]) => {
+    const a = A.demerits[key], b = B.demerits[key], dRaw = b - a;
+    const big = Math.abs(dRaw) >= 3, mid = Math.abs(dRaw) >= 1;
+    const col = big ? 'var(--red)' : mid ? 'var(--yellow)' : 'var(--dim)';
+    const sign = dRaw > 0 ? '+' : '';
+    body += `<tr><td>${label}</td><td>${fmt(a)}</td><td>${fmt(b)}</td>`
+         +  `<td style="color:${col};font-weight:600;">${sign}${fmt(dRaw)}</td></tr>`;
+  });
+  // Total score row (higher score = better conditions)
+  const dScore = B.score - A.score;
+  const scoreCol = Math.abs(dScore) >= 5 ? 'var(--red)' : Math.abs(dScore) >= 2 ? 'var(--yellow)' : 'var(--green)';
+  body += `<tr style="border-top:2px solid var(--border);font-weight:700;">`
+       +  `<td>SCORE /60</td><td>${A.score}</td><td>${B.score}</td>`
+       +  `<td style="color:${scoreCol};">${dScore > 0 ? '+' : ''}${dScore}</td></tr>`;
+  document.getElementById('cmpTableBody').innerHTML = body;
+
+  // Three swimmer metrics, side by side
+  const metricRow = (name, a, b) => {
+    const same = a.label === b.label;
+    return `<div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">`
+      + `<span style="font-size:11px;font-weight:700;color:var(--deep);">${name}</span>`
+      + `<span style="font-size:12px;color:var(--${a.cls});font-weight:600;">${a.label} <span style="color:var(--dim);font-weight:400;">(${a.score})</span></span>`
+      + `<span style="font-size:12px;color:var(--${b.cls});font-weight:600;">${b.label} <span style="color:var(--dim);font-weight:400;">(${b.score})</span>${same ? '' : ' ⚠'}</span></div>`;
+  };
+  document.getElementById('cmpMetrics').innerHTML =
+      `<div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--dim);margin-bottom:2px;">`
+    + `<span></span><span>Original</span><span>GEM</span></div>`
+    + metricRow('Entry', A.entry, B.entry)
+    + metricRow('Swim',  A.swim,  B.swim)
+    + metricRow('Surge', A.water, B.water);
+
+  if (sub) {
+    const wwP = slot.windWaveP || 5;
+    sub.innerHTML = `Slot: <strong>${bearingName(slot.swell1Dir)} ${(slot.swell1H||0).toFixed(1)}m @ ${Math.round(slot.swell1P||0)}s</strong> swell · `
+      + `WW ${bearingName(slot.windWaveDir||slot.windDir)} ${(slot.windWaveH||0).toFixed(1)}m @ ${Math.round(wwP)}s · `
+      + `wind ${Math.round(slot.windKmh||0)}km/h ${bearingName(slot.windDir)}`
+      + (haveGem ? '' : `<br><span style="color:var(--red);">⚠ GEM table unavailable — GEM column uses fallback (0.5 transmit).</span>`);
+  }
+  document.getElementById('cmpResults').style.display = 'block';
 }
 
 // =============================================================================
@@ -1844,13 +2178,13 @@ function switchTab(tab) {
   document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
+  const labelFor = { snapshot:'now', timeline:'5', about:'about', admin:'bay' };
+  const want = labelFor[tab] || tab;
   document.querySelectorAll('.tab-btn').forEach(b => {
-    if (b.textContent.toLowerCase().includes(
-      tab === 'snapshot' ? 'now' : tab === 'timeline' ? '5' : 'about')) {
-      b.classList.add('active');
-    }
+    if (b.textContent.toLowerCase().includes(want)) b.classList.add('active');
   });
   if (tab === 'about') syncCalFromForecast();
+  if (tab === 'admin') adminLoadCurrent();
 }
 
 function renderSnapshot(h, wx) {
@@ -1975,6 +2309,8 @@ function renderSnapshot(h, wx) {
     document.getElementById('sunriseTime').textContent = '—';
     document.getElementById('sunsetTime').textContent  = '—';
   }
+  // Update GEM comparison card whenever the snapshot updates
+  renderGemComparison(h);
 }
 
 // Track which day is selected in the day-picker
@@ -2091,6 +2427,110 @@ function renderSlider(matrix) {
     dt.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
 }
 
+// =============================================================================
+// GEM COMPARISON — live side-by-side card (only active in ?model=gem)
+// Computes both models from the current slider row and renders a compact card
+// showing Entry / Swim / Surge zones for each, plus score delta.
+// =============================================================================
+function renderGemComparison(h) {
+  const row = document.getElementById('gemEntryRow');
+  if (!row) return;
+  if (!GEM_MODEL || !h || !SITE.lookup) { row.style.display = 'none'; return; }
+  row.style.display = 'block';
+
+  const lk = SITE.lookup;
+  const { windKmh, windDir, swell1H, swell1Dir, swell1P,
+          swell2H, swell2Dir, swell2P, windWaveH, windWaveDir, tideM } = h;
+
+  // Original model score — exact replica of calcScore original branch
+  const s1p     = swellPower(swell1H, swell1P);
+  const s2p     = swellPower(swell2H || 0, swell2P || 8);
+  const windHit = dirLookup(lk.wind, windDir);
+  const wwHit   = Math.max(0, dirLookup(lk.sea, windWaveDir || windDir));
+  const s1sea   = Math.max(0, dirLookup(lk.sea, swell1Dir));
+  const s1rif   = dirLookup(lk.rif, swell1Dir);
+  const s2sea   = Math.max(0, dirLookup(lk.sea, swell2Dir || 0));
+  const s2rif   = dirLookup(lk.rif, swell2Dir || 0);
+  const wind_d  = windPower(windKmh) * (windHit / 100) * SITE.windSens;
+  const ww_d    = swellPower(windWaveH || 0, 5) * (wwHit / 100) * SITE.swellSens;
+  const s1_d    = s1p * (s1sea / 100) * SITE.swellSens;
+  const s2_d    = s2p * (s2sea / 100) * SITE.swellSens;
+  const rif_d   = (s1rif * s1p * SITE.spm + s2rif * s2p * SITE.spm) / 1000;
+  const o       = wind_d + ww_d + s1_d + s2_d + rif_d;
+  const total   = o + SITE.tide(o, tideM);
+  const score   = Math.max(0, Math.round(60 - total));
+
+  const label = score >= 45 ? 'Easy' : score >= 30 ? 'Doable' : score > 10 ? 'Caution' : 'Dangerous';
+  const color = score >= 45 ? 'var(--green)' : score >= 30 ? 'var(--amber)'
+              : score > 10  ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('gemEntryVal').textContent   = label;
+  document.getElementById('gemEntryVal').style.color   = color;
+  document.getElementById('gemEntryScore').textContent = score;
+  document.getElementById('gemEntryScore').style.color = color;
+
+  const pct = Math.min(97, Math.max(3, (1 - score / 60) * 100));
+  const dot = document.getElementById('gemEntryDot');
+  if (dot) { dot.style.left = pct + '%'; dot.style.color = color; dot.style.background = color; }
+
+  // ── DEBUG breakdown ──────────────────────────────────────────────────────
+  if (GEM_DEBUG) {
+    const dbg = document.getElementById('gemDebug');
+    if (dbg) {
+      dbg.style.display = 'block';
+
+      // Warn loudly if the GEM table failed to load (all lookups would return 0.5 fallback)
+      const tableStatus = SITE.gemTable
+        ? `<div style="color:#7ec8e3;">✓ GEM table loaded (${SITE.gemTable.length} dir rows)</div>`
+        : `<div style="color:#ff6b6b;font-weight:700;">⚠ GEM TABLE NOT LOADED — every lookup is using the 50% fallback. Check the sheet gid / publish settings.</div>`;
+
+      // GEM-side intermediate values (mirror calcScore GEM branch)
+      const wwP_g   = (h.windWaveP || 5);
+      const s1Tx_g  = Math.max(0, gemLookup(swell1Dir, swell1P));
+      const s2Tx_g  = Math.max(0, gemLookup(swell2Dir || 0, swell2P || 8));
+      const wwTx_g  = Math.max(0, gemLookup(windWaveDir || windDir, wwP_g));
+      const s1pow_g = swellPower(swell1H, swell1P);
+      const s2pow_g = swellPower(swell2H || 0, swell2P || 8);
+      const wind_d_g = windPower(windKmh) * (windHit / 100) * SITE.windSens;
+      const ww_d_g   = swellPower(windWaveH || 0, wwP_g) * wwTx_g * SITE.swellSens;
+      const s1_d_g   = s1pow_g * s1Tx_g * SITE.swellSens;
+      const s2_d_g   = s2pow_g * s2Tx_g * SITE.swellSens;
+      const o_g      = wind_d_g + ww_d_g + s1_d_g + s2_d_g;
+      const total_g  = o_g + SITE.tide(o_g, tideM);
+      const score_g  = Math.max(0, Math.round(60 - total_g));
+
+      const f = x => (typeof x === 'number' ? x : 0).toFixed(3);
+      const time = h.dateTime || '';
+      dbg.innerHTML =
+        `<div style="color:#7ec8e3;font-weight:700;letter-spacing:1px;margin-bottom:4px;">DEBUG · ${time}</div>` +
+        tableStatus +
+        `<div style="color:#9fd;">INPUTS:</div>` +
+        `S1 ${swell1H}m ${swell1Dir}° ${swell1P}s &nbsp; S2 ${swell2H}m ${swell2Dir}° ${swell2P}s<br>` +
+        `WW ${windWaveH}m ${windWaveDir}° ${h.windWaveP||0}s &nbsp; Wind ${windKmh}km/h ${windDir}° &nbsp; Tide ${tideM}m<br>` +
+        `<div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:2px 12px;margin-top:6px;">` +
+        `<b style="color:#9fd;"></b><b style="color:#9fd;">ORIGINAL</b><b style="color:#7ec8e3;">GEM</b>` +
+        `<span>S1 period used</span><span>${swell1P}s (real)</span><span>${swell1P}s (real)</span>` +
+        `<span>S2 period used</span><span>${swell2P||8}s</span><span>${swell2P||8}s</span>` +
+        `<span>S1 power H²·P^1.1</span><span>${f(s1p)}</span><span>${f(s1pow_g)}</span>` +
+        `<span>S2 power</span><span>${f(s2p)}</span><span>${f(s2pow_g)}</span>` +
+        `<span>S1 transmit/seaHit</span><span>sea ${s1sea}% rif ${s1rif}</span><span>${(s1Tx_g*100).toFixed(1)}%</span>` +
+        `<span>S2 transmit/seaHit</span><span>sea ${s2sea}% rif ${s2rif}</span><span>${(s2Tx_g*100).toFixed(1)}%</span>` +
+        `<span>WW transmit/seaHit</span><span>sea ${wwHit}%</span><span>${(wwTx_g*100).toFixed(1)}%</span>` +
+        `<span style="color:#fc8;">wind_d</span><span>${f(wind_d)}</span><span>${f(wind_d_g)}</span>` +
+        `<span style="color:#fc8;">ww_d</span><span>${f(ww_d)}</span><span>${f(ww_d_g)}</span>` +
+        `<span style="color:#fc8;">s1_d</span><span>${f(s1_d)}</span><span>${f(s1_d_g)}</span>` +
+        `<span style="color:#fc8;">s2_d</span><span>${f(s2_d)}</span><span>${f(s2_d_g)}</span>` +
+        `<span style="color:#fc8;">rif_d</span><span>${f(rif_d)}</span><span>0 (in table)</span>` +
+        `<span style="color:#9fd;">subtotal o</span><span>${f(o)}</span><span>${f(o_g)}</span>` +
+        `<span style="color:#9fd;">tide_d</span><span>${f(SITE.tide(o,tideM))}</span><span>${f(SITE.tide(o_g,tideM))}</span>` +
+        `<span style="color:#9fd;">total</span><span>${f(total)}</span><span>${f(total_g)}</span>` +
+        `<b style="color:#7ec8e3;">SCORE 60−total</b><b>${score}</b><b style="color:#7ec8e3;">${score_g}</b>` +
+        `</div>`;
+    }
+  }
+}
+
+
 function onSlider(val) {
   // val is position within the day's rows
   const dayRows = _matrix.map((r,i) => ({r,i})).filter(({r}) => r.dateTime.startsWith(_selectedDay));
@@ -2102,6 +2542,7 @@ function onSlider(val) {
   const dt = h.dateTime.replace(' ','T').substring(0,16);
   const wx = _wxMatrix[dt] || null;
   renderSnapshot(h, wx);
+  renderGemComparison(h);
   renderSlider(_matrix);
 }
 
@@ -2370,7 +2811,7 @@ async function loadAndRender(forceRefresh = false) {
 // HARD REFRESH + PULL-TO-REFRESH
 // =============================================================================
 function hardRefresh() {
-  ['swim_ww_cache','swim_ww_cache_v2','swim_ww_cache_v3','swim_ww_cache_v4','swim_om_cache_v1','swim_om_cache_v2','swim_om_cache_v3','swim_omwx_cache_v1','swim_omwx_cache_v2','swim_omwx_cache_v3','swim_config_cache_v1','swim_config_cache_v2','swim_config_cache_v3','swim_bw_cache_v1'].forEach(k => {
+  ['swim_ww_cache','swim_ww_cache_v2','swim_ww_cache_v3','swim_ww_cache_v4','swim_om_cache_v1','swim_om_cache_v2','swim_om_cache_v3','swim_omwx_cache_v1','swim_omwx_cache_v2','swim_omwx_cache_v3','swim_config_cache_v1','swim_config_cache_v2','swim_config_cache_v3','swim_bw_cache_v1','swim_gem_config_v1','swim_gem_config_v2'].forEach(k => {
     try { localStorage.removeItem(k); } catch(e) {}
   });
   window.location.reload(true);
@@ -2566,7 +3007,18 @@ setInterval(() => { if (_bbCache) bbRenderFromData(_bbCache); }, 60 * 1000);
 // =============================================================================
 _retryFn = () => loadAndRender(true);
 // Load config from sheet first, then fetch forecast
-loadConfig().then(() => loadAndRender());
+// Show GEM badge and load GEM table if in GEM model mode
+if (GEM_MODEL) {
+  const badge = document.getElementById('gem-badge');
+  if (badge) badge.style.display = 'inline';
+}
+loadConfig().then(() => {
+  if (GEM_MODEL) {
+    loadGemConfig().then(() => loadAndRender());
+  } else {
+    loadAndRender();
+  }
+});
 
   // ===== SPLASH SCREEN =====
   (function() {
@@ -2647,42 +3099,63 @@ function runCalibration() {
   const swell2Dir = h.swell2Dir   || 0;
   const wwH       = h.windWaveH   || 0;
   const wwDir     = h.windWaveDir || 0;
+  const wwP       = h.windWaveP   || 5;
   const tideM     = h.tideM;
 
   const wind_hit   = dirLookup(lk.wind, windDir);
-  const ww_sea_hit = ssEnergyTransmit(wwDir, 5);                 // table (period-aware)
-  const s1_sea     = ssEnergyTransmit(swell1Dir, swell1P);       // table
-  const s2_sea     = ssEnergyTransmit(swell2Dir, swell2P);       // table
 
-  const pCap   = SITE.swellPeriodMult || 5;
-  const s1p    = swellPower(swell1H, Math.min(swell1P, pCap));
-  const s2p    = swellPower(swell2H, Math.min(swell2P, pCap));
+  let app_wind_d, app_ww_d, app_s1_d, app_s2_d, app_rif_d;
+  let sh_wind_d, sh_ww_d, sh_s1_d, sh_s2_d, sh_rif_d;
+  let s1_sea, s2_sea, s1p, s2p; // for lookup info display
 
-  const app_wind_d = windPower(windKmh) * (wind_hit / 100) * SITE.windSens;
-  const app_ww_d   = swellPower(wwH, 5) * (ww_sea_hit / 100) * SITE.swellSens;
-  const app_s1_d   = s1p * (s1_sea / 100) * SITE.swellSens;
-  const app_s2_d   = s2p * (s2_sea / 100) * SITE.swellSens;
-  const app_o      = app_wind_d + app_ww_d + app_s1_d + app_s2_d;
+  app_wind_d = windPower(windKmh) * (wind_hit / 100) * SITE.windSens;
+
+  if (GEM_MODEL) {
+    const wwTx  = Math.max(0, gemLookup(wwDir, wwP));
+    const s1Tx  = Math.max(0, gemLookup(swell1Dir, swell1P));
+    const s2Tx  = Math.max(0, gemLookup(swell2Dir, swell2P));
+    app_ww_d  = swellPower(wwH, wwP) * wwTx * SITE.swellSens;
+    app_s1_d  = swellPower(swell1H, swell1P) * s1Tx * SITE.swellSens;
+    app_s2_d  = swellPower(swell2H, swell2P) * s2Tx * SITE.swellSens;
+    app_rif_d = 0;
+    // Sheet comparison not applicable in GEM mode — show same values
+    sh_wind_d = app_wind_d; sh_ww_d = app_ww_d;
+    sh_s1_d = app_s1_d; sh_s2_d = app_s2_d; sh_rif_d = 0;
+    s1_sea = Math.round(s1Tx * 100); s2_sea = Math.round(s2Tx * 100);
+    s1p = swellPower(swell1H, swell1P); s2p = swellPower(swell2H, swell2P);
+  } else {
+    const ww_sea_hit = Math.max(0, dirLookup(lk.sea, wwDir));
+    s1_sea     = Math.max(0, dirLookup(lk.sea, swell1Dir));
+    const s1_rif     = dirLookup(lk.rif, swell1Dir);
+    s2_sea     = Math.max(0, dirLookup(lk.sea, swell2Dir));
+    const s2_rif     = dirLookup(lk.rif, swell2Dir);
+    const pCap   = SITE.swellPeriodMult || 5;
+    s1p    = swellPower(swell1H, swell1P);
+    s2p    = swellPower(swell2H, swell2P);
+    app_ww_d   = swellPower(wwH, 5) * (ww_sea_hit / 100) * SITE.swellSens;
+    app_s1_d   = s1p * (s1_sea / 100) * SITE.swellSens;
+    app_s2_d   = s2p * (s2_sea / 100) * SITE.swellSens;
+    app_rif_d  = (s1_rif * s1p * SITE.spm + s2_rif * s2p * SITE.spm) / 1000;
+    // Sheet formula (no period cap)
+    const s1p_sh  = swellPower(swell1H, swell1P);
+    const s2p_sh  = swellPower(swell2H, swell2P);
+    sh_wind_d = windPower(windKmh) * (wind_hit / 100) * SITE.windSens;
+    sh_ww_d   = swellPower(wwH, 5) * (ww_sea_hit / 100) * SITE.swellSens;
+    sh_s1_d   = s1p_sh * (s1_sea / 100) * SITE.swellSens;
+    sh_s2_d   = s2p_sh * (s2_sea / 100) * SITE.swellSens;
+    sh_rif_d  = (s1_rif * s1p_sh * SITE.spm + s2_rif * s2p_sh * SITE.spm) / 1000;
+  }
+
+  // Shared totals (used by both branches)
+  const app_o      = app_wind_d + app_ww_d + app_s1_d + app_s2_d + app_rif_d;
   const app_tide_d = app_o * (tideM - 0.2);
   const app_total  = app_o + app_tide_d;
   const app_score  = Math.max(0, Math.round(60 - app_total));
-
-  // ── Sheet formula (same lookups, no period cap, no windSens/swellSens scaling) ──
-  // Based on reverse-engineering: sheet uses h^2 * p^1.1 raw, then * seaHit/100 * swellSens
-  // but without the period cap. windSens for S.Steyne = 1.0 so wind_d is same.
-  // Refraction now lives inside the energy table, so there is no separate rif term.
-  const s1p_sh  = swellPower(swell1H, swell1P);   // no cap
-  const s2p_sh  = swellPower(swell2H, swell2P);   // no cap
-  const sh_wind_d = windPower(windKmh) * (wind_hit / 100) * SITE.windSens;
-  const sh_ww_d   = swellPower(wwH, 5) * (ww_sea_hit / 100) * SITE.swellSens;
-  const sh_s1_d   = s1p_sh * (s1_sea / 100) * SITE.swellSens;
-  const sh_s2_d   = s2p_sh * (s2_sea / 100) * SITE.swellSens;
-  const sh_o      = sh_wind_d + sh_ww_d + sh_s1_d + sh_s2_d;
-  const sh_tide_d = sh_o * (tideM - 0.2);
-  const sh_total  = sh_o + sh_tide_d;
-  const sh_score  = Math.max(0, Math.round(60 - sh_total));
-
-  // Helper
+  const sh_o       = sh_wind_d + sh_ww_d + sh_s1_d + sh_s2_d + sh_rif_d;
+  const sh_tide_d  = sh_o * (tideM - 0.2);
+  const sh_total   = sh_o + sh_tide_d;
+  const sh_score   = Math.max(0, Math.round(60 - sh_total));
+  const pCap       = GEM_MODEL ? '—' : (SITE.swellPeriodMult || 5);
   function fmt(x) { return (typeof x === 'number' ? x : 0).toFixed(3); }
   function deltaClass(d) {
     const a = Math.abs(d);
@@ -2695,6 +3168,7 @@ function runCalibration() {
     ['Wind wave demerit', app_ww_d,   sh_ww_d,   app_ww_d   - sh_ww_d],
     ['Swell 1 demerit',   app_s1_d,   sh_s1_d,   app_s1_d   - sh_s1_d],
     ['Swell 2 demerit',   app_s2_d,   sh_s2_d,   app_s2_d   - sh_s2_d],
+    ['Refraction',        app_rif_d,  sh_rif_d,  app_rif_d  - sh_rif_d],
     ['TOTAL demerits',    app_total,  sh_total,  app_total  - sh_total],
     ['SCORE (60−total)',  app_score,  sh_score,  app_score  - sh_score],
   ];
@@ -2717,12 +3191,11 @@ function runCalibration() {
   // Lookup + config summary
   const lookupInfo = `<div style="margin-top:8px;font-size:10px;color:var(--dim);line-height:1.8;">
     <b style="color:var(--ocean);letter-spacing:1px;">LOOKUPS</b><br>
-    Wind ${windDir}° → ${wind_hit}% &nbsp;|&nbsp; WW ${wwDir}° → ${ww_sea_hit.toFixed(1)}%<br>
-    S1 ${swell1Dir}°/${swell1P}s → energy ${s1_sea.toFixed(1)}%${s1_sea===0?' <b style=\'color:var(--amber)\'>← 0%</b>':''}&nbsp;|&nbsp;
-    S2 ${swell2Dir}°/${swell2P}s → energy ${s2_sea.toFixed(1)}%${s2_sea===0?' <b style=\'color:var(--amber)\'>← 0%</b>':''}<br>
-    <b style="color:var(--ocean);">Energy from refraction+headland table (period-aware)</b><br>
-    <b>App:</b> windSens=${SITE.windSens} swellSens=${SITE.swellSens} periodCap=${pCap}<br>
-    <b>Sheet:</b> same sens, no period cap
+    Wind ${windDir}° → ${wind_hit}% &nbsp;|&nbsp; WW ${wwDir}° → ${ww_sea_hit}%<br>
+    S1 ${swell1Dir}° → sea ${s1_sea}%${s1_sea===0?' <b style=\'color:var(--amber)\'>← 0%</b>':''}&nbsp;|&nbsp;
+    S2 ${swell2Dir}° → sea ${s2_sea}%${s2_sea===0?' <b style=\'color:var(--amber)\'>← 0%</b>':''}<br>
+    <b>App:</b> windSens=${SITE.windSens} swellSens=${SITE.swellSens} (real period, no cap)<br>
+    <b>Sheet:</b> same sens, real period
   </div>`;
 
   // Overall score summary
@@ -3057,6 +3530,168 @@ async function generateBannerSummary() {
 
   document.getElementById('banner-wx-text').innerHTML    = emphasise(wxText);
   document.getElementById('banner-water-text').innerHTML = emphasise(waterText);
+
+  // Sealife section
+  generateBannerSealife(rows);
+  // Overlay latest community diver report (if recent) on top of seasonal model
+  fetchLatestSighting().then(applySightingToBanner);
+}
+
+// =============================================================================
+// SEALIFE BANNER — monthly species likelihood for Cabbage Tree Bay
+// Data sourced from VIZ Tracking Project (Marco Bordieri, 2019–2023)
+// =============================================================================
+function generateBannerSealife(rows) {
+
+  // Monthly presence data — index 0=Jan … 11=Dec
+  // Likelihood: 'resident' | 'likely' | 'possible' | 'rare' | null (absent)
+  // SST thresholds used to refine dynamically where noted
+  const SPECIES = [
+    {
+      name: 'Sea Turtle',
+      emoji: '🐢',
+      months: ['possible','possible','possible','likely','likely','likely','likely','likely','likely','likely','likely','possible'],
+      note: [
+        'Resident green and hawksbill turtles are seen most mornings — check the sandy patches near the mooring buoys.',
+        'Keep a quiet eye on the bottom near the mooring buoys — the resident turtles tend to cruise through most mornings.',
+        'The bay\'s resident turtles are out there — they favour the sandy areas between the reef patches. Slow, steady swimming gives you the best chance of a close pass.',
+        'Good turtle month. Scan the sandy bottom slowly as you cross the bay — they\'re often resting near the mooring chains.',
+      ],
+      link: 'https://viz.net.au',
+    },
+    {
+      name: 'Port Jackson Shark',
+      emoji: '🦈',
+      // Arrive June/July (~17–19°C), peak Jul–Oct mating, gone by Dec
+      months: [null, null, null, null, null, 'possible', 'likely', 'likely', 'likely', 'likely', 'possible', null],
+      sstMin: 14, sstMax: 20, // only present in cooler water
+      note: [
+        'Port Jackson Sharks are back for their winter breeding season. Look under ledges and in crevices along the reef — they rest in groups during the day.',
+        'PJ season is well underway. These gentle bottom-dwellers wedge themselves under ledges to rest — check any dark overhang as you swim along the reef wall.',
+        'Port Jacksons are around in numbers right now. Pairs are often spotted together during mating — give them space and enjoy the show.',
+      ],
+    },
+    {
+      name: 'Giant Cuttlefish',
+      emoji: '🦑',
+      // Arrive May/Jun, peak Jun–Aug mating, gone Oct/Nov
+      months: [null, null, null, null, 'possible', 'likely', 'likely', 'likely', 'possible', null, null, null],
+      note: [
+        'Giant Australian Cuttlefish are at peak mating season in Cabbage Tree Bay right now — this is one of the best times of year to see their extraordinary colour-changing displays.',
+        'Cuttlefish season. Keep an eye along the reef edge — males display vivid patterns to attract females and warn off rivals. Genuinely one of the ocean\'s great spectacles.',
+        'The cuttlefish are in and putting on a show. Watch for the rippling skin and colour pulses — if you hover still they\'ll often investigate you out of curiosity.',
+      ],
+    },
+    {
+      name: 'Dusky Whaler Shark',
+      emoji: '🦈',
+      // Summer only Dec–Mar, water ≥22°C
+      months: ['likely', 'likely', 'possible', null, null, null, null, null, null, null, null, 'possible'],
+      sstMin: 22,
+      note: [
+        'Dusky Whalers visit the north end of the bay in summer when the water warms up. They\'re protected and generally uninterested in swimmers — a thrilling sighting if you\'re lucky.',
+        'With water temps climbing, Dusky Whalers may be patrolling the northern edge of the bay. A dozen has been spotted on peak days — keep an eye out near the headland.',
+      ],
+    },
+    {
+      name: 'Grey Nurse Shark',
+      emoji: '🦈',
+      // Occasional Jun–Sep
+      months: [null, null, null, null, null, 'rare', 'rare', 'rare', 'rare', null, null, null],
+      note: [
+        'Grey Nurse Sharks have been making occasional appearances at CTB — a rare treat. Despite their fierce look they\'re placid and slow-moving. If you see one, give it space and savour it.',
+      ],
+    },
+    {
+      name: 'Cownose Ray',
+      emoji: '🌊',
+      // Rare swarm events Feb–Apr and Sep–Oct
+      months: [null, 'rare', 'rare', 'rare', null, null, null, null, 'rare', 'rare', null, null],
+      note: [
+        'Keep an eye out — Cownose Rays sometimes appear in formation in CTB this time of year. A fever of dozens gliding together is one of those bucket-list ocean moments.',
+      ],
+    },
+    {
+      name: 'Australian Angelshark',
+      emoji: '🦈',
+      // Rare Apr–Aug
+      months: [null, null, null, 'rare', 'rare', 'rare', 'rare', 'rare', null, null, null, null],
+      note: [
+        'Angelsharks are occasionally spotted half-buried in the sand at CTB at this time of year — very easy to miss. Scan the sandy patches slowly and look for an outline.',
+      ],
+    },
+    {
+      name: 'Little Penguin',
+      emoji: '🐧',
+      // Rare Feb–Mar only
+      months: [null, 'rare', 'rare', null, null, null, null, null, null, null, null, null],
+      note: [
+        'Little Penguins have wandered into CTB a couple of times in late summer — possibly from the North Head colony. Incredibly rare but not impossible right now.',
+      ],
+    },
+  ];
+
+  const month = new Date().getMonth(); // 0-indexed
+  const sst = rows.length ? (rows.reduce((s,r) => s + (r.seaTemp || 18), 0) / rows.length) : null;
+
+  // Filter to species that are present this month
+  const present = SPECIES.map(sp => {
+    let likelihood = sp.months[month];
+    if (!likelihood) return null;
+
+    // SST gate: suppress if water temp outside species range
+    if (sst != null) {
+      if (sp.sstMin != null && sst < sp.sstMin) return null;
+      if (sp.sstMax != null && sst > sp.sstMax) return null;
+    }
+
+    return { ...sp, likelihood };
+  }).filter(Boolean);
+
+  if (!present.length) {
+    document.getElementById('banner-sealife-text').textContent = 'No notable seasonal species expected this month — but the bay always surprises.';
+    return;
+  }
+
+  // Sort: resident → likely → possible → rare
+  const order = { resident: 0, likely: 1, possible: 2, rare: 3 };
+  present.sort((a, b) => order[a.likelihood] - order[b.likelihood]);
+
+  // Pick the lead species for the narrative note (highest likelihood, prefer turtle)
+  const lead = present.find(s => s.name === 'Sea Turtle') || present[0];
+  const leadNote = pick(lead.note);
+
+  // Build species list HTML
+  const pillLabel = { resident: 'Resident', likely: 'Likely', possible: 'Possible', rare: 'Rare' };
+  const pillClass = { resident: 'pill-resident', likely: 'pill-likely', possible: 'pill-possible', rare: 'pill-rare' };
+
+  let html = `<div class="sealife-row">`;
+  present.forEach(sp => {
+    html += `<div class="sealife-item">
+      <span class="sealife-pill ${pillClass[sp.likelihood]}">${pillLabel[sp.likelihood]}</span>
+      <span>${sp.emoji} ${sp.name}</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Append lead narrative
+  html += `<div style="margin-top:8px;">${leadNote}</div>`;
+
+  // SST context line
+  if (sst != null) {
+    const sstRound = sst.toFixed(1);
+    let sstLine = '';
+    if (sst >= 22) sstLine = ` Water at <em>${sstRound}°C</em> — prime conditions for summer visitors.`;
+    else if (sst >= 19) sstLine = ` Water at <em>${sstRound}°C</em> — warming up, transition season in the bay.`;
+    else if (sst >= 16) sstLine = ` Water at <em>${sstRound}°C</em> — cool enough for the winter regulars.`;
+    else sstLine = ` Water at <em>${sstRound}°C</em> — cold water brings its own residents.`;
+    html += `<div style="margin-top:5px;font-size:11px;color:var(--dim);">${sstLine}</div>`;
+  }
+
+  document.getElementById('banner-sealife-text').innerHTML = html;
+
+  // Set icon to lead species emoji
+  document.getElementById('banner-sealife-icon').textContent = lead.emoji;
 }
 
 
@@ -3130,6 +3765,195 @@ function submitFeedback(e) {
     window.location.href = mailtoLink;
   });
 }
+
+// ============================================================
+// BAY SIGHTINGS — ADMIN (paste → AI summarise → publish)
+// ============================================================
+// Public summary surfaces in the "In the bay this month" banner.
+// Admin tab is hidden; unlocked via #bay-admin URL hash + passphrase.
+// Summarisation is proxied through the Cloudflare Worker /summarise
+// route (which holds the Anthropic API key as a Worker secret — the
+// key must NEVER live in this client file). Publish writes to the
+// Supabase `bay_sightings` table (public read + insert RLS).
+// ------------------------------------------------------------
+
+const SIGHTINGS_WORKER_URL = 'https://bold-rain-6ded.sticasale.workers.dev/summarise';
+const SIGHTINGS_TABLE_URL  = BB_SUPABASE_URL + '/rest/v1/bay_sightings';
+
+// Change this to whatever you like — it only keeps casual users out of
+// the tab. Real protection is that Supabase RLS is insert/read-only.
+const ADMIN_PASSPHRASE = 'cabbagetree';
+
+// --- Editable prompt. Tune freely. {POSTS} is replaced with the pasted text.
+const SIGHTINGS_PROMPT = `You are writing a short, friendly public note for an ocean-swimming and snorkelling app about Cabbage Tree Bay / South Steyne, Manly. Below are recent posts from a local dive/snorkel Facebook group.
+
+Write 2-3 sentences summarising what has recently been SPOTTED in the bay and the latest VISIBILITY conditions. Be warm and concise, suitable for swimmers. Mention specific marine life and any visibility (in metres) reported. Do not invent anything not in the posts. Do not use bullet points, headers, or quotation marks. Plain sentences only. If the posts contain nothing relevant, reply with exactly: NONE
+
+Recent posts:
+{POSTS}`;
+
+function adminUnlock() {
+  const pass = prompt('Enter admin passphrase:');
+  if (pass === null) return;
+  if (pass === ADMIN_PASSPHRASE) {
+    document.getElementById('tab-btn-admin').style.display = 'block';
+    switchTab('admin');
+  } else {
+    alert('Incorrect passphrase.');
+  }
+}
+
+function adminSetStatus(msg, kind) {
+  const el = document.getElementById('admin-status');
+  el.textContent = msg || '';
+  el.className = 'admin-status' + (kind ? ' ' + kind : '');
+}
+
+async function adminSummarise() {
+  const input = document.getElementById('admin-input').value.trim();
+  if (!input) { adminSetStatus('Paste some posts first.', 'err'); return; }
+
+  const btn = document.getElementById('admin-summarise-btn');
+  btn.disabled = true;
+  adminSetStatus('Summarising…');
+
+  const prompt = SIGHTINGS_PROMPT.replace('{POSTS}', input);
+
+  try {
+    const res = await fetch(SIGHTINGS_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) throw new Error('Worker ' + res.status);
+    const data = await res.json();
+
+    // Anthropic response: collect all text blocks
+    const text = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join('\n')
+      .trim();
+
+    if (!text || text.toUpperCase() === 'NONE') {
+      adminSetStatus('No relevant sightings found in those posts.', 'err');
+      document.getElementById('admin-preview').classList.remove('visible');
+      document.getElementById('admin-publish-row').style.display = 'none';
+    } else {
+      const prev = document.getElementById('admin-preview');
+      prev.textContent = text;
+      prev.classList.add('visible');
+      document.getElementById('admin-publish-row').style.display = 'flex';
+      adminSetStatus('Review and edit the summary above, then publish. (You can edit the text directly.)', 'ok');
+    }
+  } catch (e) {
+    adminSetStatus('Could not reach summariser: ' + e.message + '. Check the Worker /summarise route.', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function adminPublish() {
+  const summary = document.getElementById('admin-preview').textContent.trim();
+  const raw     = document.getElementById('admin-input').value.trim();
+  if (!summary) { adminSetStatus('Nothing to publish.', 'err'); return; }
+
+  const btn = document.getElementById('admin-publish-btn');
+  btn.disabled = true;
+  adminSetStatus('Publishing…');
+
+  try {
+    const res = await fetch(SIGHTINGS_TABLE_URL, {
+      method: 'POST',
+      headers: {
+        'apikey': BB_SUPABASE_KEY,
+        'Authorization': 'Bearer ' + BB_SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ summary: summary, raw_input: raw })
+    });
+    if (!res.ok) throw new Error('Supabase ' + res.status);
+    adminSetStatus('Published! It will appear in the banner for all users.', 'ok');
+    document.getElementById('admin-input').value = '';
+    document.getElementById('admin-preview').classList.remove('visible');
+    document.getElementById('admin-publish-row').style.display = 'none';
+    adminLoadCurrent();
+    // Refresh the public banner immediately for this session too
+    fetchLatestSighting().then(applySightingToBanner);
+  } catch (e) {
+    adminSetStatus('Publish failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function adminLoadCurrent() {
+  const el = document.getElementById('admin-current');
+  try {
+    const s = await fetchLatestSighting();
+    if (s && s.summary) {
+      const when = s.created_at ? new Date(s.created_at).toLocaleString('en-AU',
+        { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+      el.innerHTML = '<b>Currently live:</b><br>' + s.summary +
+        (when ? '<br><span style="opacity:0.7;">Published ' + when + '</span>' : '');
+    } else {
+      el.innerHTML = '<b>Currently live:</b> nothing published yet — the banner is showing the seasonal species model.';
+    }
+  } catch (e) {
+    el.textContent = 'Could not load current summary.';
+  }
+}
+
+// --- Public side: fetch most recent published sighting ---
+let _latestSighting = null;
+async function fetchLatestSighting() {
+  try {
+    const res = await fetch(
+      SIGHTINGS_TABLE_URL + '?select=summary,created_at&order=created_at.desc&limit=1',
+      { headers: { 'apikey': BB_SUPABASE_KEY, 'Authorization': 'Bearer ' + BB_SUPABASE_KEY } }
+    );
+    if (!res.ok) throw new Error('Supabase ' + res.status);
+    const rows = await res.json();
+    _latestSighting = (rows && rows.length) ? rows[0] : null;
+    return _latestSighting;
+  } catch (e) {
+    return null;
+  }
+}
+
+// How recent must a sighting be to show? (days) — older ones fall back to seasonal model
+const SIGHTING_MAX_AGE_DAYS = 14;
+
+function applySightingToBanner(s) {
+  if (!s || !s.summary) return;
+  if (s.created_at) {
+    const ageDays = (Date.now() - new Date(s.created_at).getTime()) / 86400000;
+    if (ageDays > SIGHTING_MAX_AGE_DAYS) return;  // too old; leave seasonal model
+  }
+  const target = document.getElementById('banner-sealife-text');
+  if (!target) return;
+  const when = s.created_at
+    ? new Date(s.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short' })
+    : '';
+  // Prepend the live community report above the seasonal species model
+  const block = document.createElement('div');
+  block.style.cssText = 'margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--border);';
+  block.innerHTML =
+    '<div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ocean);margin-bottom:4px;">Latest diver reports' +
+    (when ? ' · ' + when : '') + '</div>' +
+    '<div>' + s.summary.replace(/</g,'&lt;') + '</div>';
+  target.prepend(block);
+}
+
+// Unlock via URL hash, then load any published sighting for the public banner
+window.addEventListener('DOMContentLoaded', function() {
+  if (location.hash === '#bay-admin') adminUnlock();
+});
 
 </script>
 </body>
